@@ -2800,8 +2800,73 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
    }
  }
 
- // Initialize profile on page load
- checkAuthAndShowProfile();
+// Initialize profile on page load
+checkAuthAndShowProfile();
+
+// Session validation - check periodically and on API errors
+let sessionCheckInterval = null;
+let isRedirecting = false;
+
+async function validateSession() {
+  // Prevent multiple simultaneous redirects
+  if (isRedirecting) return;
+
+  try {
+    const response = await fetch('/api/auth/check', {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      isRedirecting = true;
+      window.location.href = '/';
+      return;
+    }
+    
+    const data = await response.json();
+    if (!data || !data.message || data.message === 'Guest') {
+      isRedirecting = true;
+      window.location.href = '/';
+    }
+  } catch (error) {
+    // Session check failed, redirect to login
+    isRedirecting = true;
+    window.location.href = '/';
+  }
+}
+
+// Check session every 30 seconds
+sessionCheckInterval = setInterval(validateSession, 30000);
+
+// Also check on visibility change (when user switches tabs/windows)
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    validateSession();
+  }
+});
+
+// Check on window focus
+window.addEventListener('focus', validateSession);
+
+// Enhanced fetch wrapper to check for auth errors
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  return originalFetch.apply(this, args).then(response => {
+    // Check for authentication errors
+    if (response.status === 401 || response.status === 403) {
+      isRedirecting = true;
+      window.location.href = '/';
+      return Promise.reject(new Error('Session expired'));
+    }
+    return response;
+  }).catch(error => {
+    // If fetch fails and it's an auth-related error, redirect
+    if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
+      isRedirecting = true;
+      window.location.href = '/';
+    }
+    throw error;
+  });
+};
 
  // Profile dropdown handlers
  document.getElementById('profile-icon').addEventListener('click', function(e) {

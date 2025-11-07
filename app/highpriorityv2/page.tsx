@@ -312,6 +312,12 @@ export default function HighPriorityV2Page(): JSX.Element {
         headers,
       });
 
+      // Check for authentication errors
+      if (response.status === 401 || response.status === 403) {
+        router.push('/');
+        return;
+      }
+
       if (!response.ok) {
         const errText = await response.text();
         throw new Error(`HTTP ${response.status}: ${response.statusText}\n${errText}`);
@@ -426,6 +432,64 @@ export default function HighPriorityV2Page(): JSX.Element {
     }, 5 * 60 * 1000);
     return () => clearInterval(id);
   }, [fetchData]);
+
+  // Session validation - check periodically and on API errors
+  useEffect(() => {
+    let sessionCheckInterval: NodeJS.Timeout | null = null
+    let isRedirecting = false
+
+    const validateSession = async () => {
+      // Prevent multiple simultaneous redirects
+      if (isRedirecting) return
+
+      try {
+        const response = await fetch("/api/auth/check", { 
+          credentials: "include" 
+        })
+        
+        if (!response.ok) {
+          isRedirecting = true
+          router.push('/')
+          return
+        }
+        
+        const data = await response.json()
+        if (!data || !data.message || data.message === "Guest") {
+          isRedirecting = true
+          router.push('/')
+        }
+      } catch (error) {
+        // Session check failed, redirect to login
+        isRedirecting = true
+        router.push('/')
+      }
+    }
+
+    // Check session every 30 seconds
+    sessionCheckInterval = setInterval(validateSession, 30000)
+
+    // Also check on visibility change (when user switches tabs/windows)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        validateSession()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Check on window focus
+    const handleFocus = () => {
+      validateSession()
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval)
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [router])
 
   return (
     <>

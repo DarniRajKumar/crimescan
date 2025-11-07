@@ -413,12 +413,15 @@ export default function DailyCauseList507Page() {
     min-height: 400px;
     transition: min-height 0.3s ease;
     position: relative;
+    padding-bottom: 0;
+    margin-bottom: 0;
   }
 
   /* Table styling */
   .table-responsive {
     overflow-x: auto;
     min-height: 300px;
+    margin-bottom: 0;
   }
   table {
     width: 100%;
@@ -426,7 +429,7 @@ export default function DailyCauseList507Page() {
     background-color: white;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     border-radius: 5px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
   }
   th, td {
     padding: 12px 15px;
@@ -785,7 +788,7 @@ export default function DailyCauseList507Page() {
     height: 20px;
   }
 
-  /* Pagination styles - minimalist design matching highpriorityv2 */
+  /* Pagination styles - minimalist design with improved UX */
   .pagination-container {
     position: sticky;
     bottom: 0;
@@ -794,13 +797,14 @@ export default function DailyCauseList507Page() {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 14px 20px;
+    padding: 12px 24px;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(0, 0, 0, 0.08);
     box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
     z-index: 100;
     margin: 0;
+    margin-top: 4px;
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
   }
@@ -812,19 +816,24 @@ export default function DailyCauseList507Page() {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
+    gap: 16px;
   }
   
   .pagination-info-left {
     font-size: 14px;
     color: #2c3e50;
     font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   
   .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1;
   }
   
   /* Active page - blue circular button */
@@ -842,33 +851,71 @@ export default function DailyCauseList507Page() {
     align-items: center;
     justify-content: center;
     padding: 0;
-    box-shadow: 0 0 0 1px rgba(52, 152, 219, 0.2);
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    transition: box-shadow 0.2s ease;
   }
   
   /* Inactive page numbers and navigation - plain text links */
-  .pagination-link {
+  .pagination-link,
+  button.pagination-link,
+  .pagination-controls button.pagination-link {
     background: none;
     border: none;
     color: #2c3e50;
-    cursor: pointer;
+    cursor: pointer !important;
     font-size: 14px;
     font-weight: 400;
-    padding: 0;
+    padding: 6px 8px;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    min-width: 28px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
   
-  .pagination-link:hover {
+  .pagination-link:hover,
+  button.pagination-link:hover,
+  .pagination-controls button.pagination-link:hover {
     color: #3498db;
+    background-color: rgba(52, 152, 219, 0.08);
+    transform: translateY(-1px);
+    cursor: pointer !important;
   }
   
-  .pagination-link:active {
+  .pagination-link:active,
+  button.pagination-link:active,
+  .pagination-controls button.pagination-link:active {
     color: #2980b9;
+    background-color: rgba(52, 152, 219, 0.12);
+    transform: translateY(0);
+    cursor: pointer !important;
+  }
+  
+  .pagination-link:focus,
+  button.pagination-link:focus,
+  .pagination-controls button.pagination-link:focus {
+    outline: 2px solid rgba(52, 152, 219, 0.3);
+    outline-offset: 2px;
+    cursor: pointer !important;
+  }
+  
+  .pagination-link:disabled,
+  button.pagination-link:disabled,
+  .pagination-controls button.pagination-link:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.5;
   }
   
   @media (max-width: 768px) {
     .pagination-container {
-      padding: 10px 15px;
+      padding: 12px 16px;
     }
     
     .pagination-inner {
@@ -878,8 +925,9 @@ export default function DailyCauseList507Page() {
     }
     
     .pagination-info-left {
-      font-size: 12px;
+      font-size: 13px;
       width: 100%;
+      text-align: left;
     }
     
     .pagination-controls {
@@ -892,11 +940,34 @@ export default function DailyCauseList507Page() {
     .pagination-btn-active {
       width: 32px;
       height: 32px;
-      font-size: 12px;
+      font-size: 13px;
     }
     
-    .pagination-link {
-      font-size: 12px;
+    .pagination-link,
+    button.pagination-link,
+    .pagination-controls button.pagination-link {
+      font-size: 13px;
+      padding: 5px 7px;
+      min-width: 26px;
+      cursor: pointer !important;
+    }
+    
+    .pagination-link:hover,
+    button.pagination-link:hover,
+    .pagination-controls button.pagination-link:hover {
+      cursor: pointer !important;
+    }
+    
+    .pagination-link:active,
+    button.pagination-link:active,
+    .pagination-controls button.pagination-link:active {
+      cursor: pointer !important;
+    }
+    
+    .pagination-link:focus,
+    button.pagination-link:focus,
+    .pagination-controls button.pagination-link:focus {
+      cursor: pointer !important;
     }
   }
 
@@ -995,7 +1066,7 @@ export default function DailyCauseList507Page() {
     <!-- Active filters display -->
     <div id="active-filters" class="active-filters" style="display: none;">
       <span>Active Filters:</span>
-        <div id="filter-results-count" class="filter-results-count"></div>
+      <div id="filter-results-count" class="filter-results-count"></div>
       <div id="active-filter-tags"></div>
     
     </div>
@@ -2562,7 +2633,7 @@ if (totalPages <= 1) {
   paginationContainer.innerHTML = \`
     <div class="pagination-inner">
       <div class="pagination-info-left">
-        Showing all \${totalCases} cases
+      Showing all \${totalCases} cases
       </div>
     </div>
   \`;
@@ -2588,8 +2659,8 @@ paginationContainer.innerHTML = \`
   <div class="pagination-inner">
     <div class="pagination-info-left">
       Page \${currentPage} of \${totalPages}
-    </div>
-    <div class="pagination-controls">
+  </div>
+  <div class="pagination-controls">
       \${currentPage > 1 ? \`<button class="pagination-link" onclick="goToPage(\${currentPage - 1})" title="Previous page">Prev</button>\` : ''}
       \${pageNumbers.map(page => 
         page === currentPage 
@@ -3102,6 +3173,71 @@ async function checkAuthAndShowProfile() {
 
 // Initialize profile on page load
 checkAuthAndShowProfile();
+
+// Session validation - check periodically and on API errors
+let sessionCheckInterval = null;
+let isRedirecting = false;
+
+async function validateSession() {
+  // Prevent multiple simultaneous redirects
+  if (isRedirecting) return;
+
+  try {
+    const response = await fetch('/api/auth/check', {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      isRedirecting = true;
+      window.location.href = '/';
+      return;
+    }
+    
+    const data = await response.json();
+    if (!data || !data.message || data.message === 'Guest') {
+      isRedirecting = true;
+      window.location.href = '/';
+    }
+  } catch (error) {
+    // Session check failed, redirect to login
+    isRedirecting = true;
+    window.location.href = '/';
+  }
+}
+
+// Check session every 30 seconds
+sessionCheckInterval = setInterval(validateSession, 30000);
+
+// Also check on visibility change (when user switches tabs/windows)
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    validateSession();
+  }
+});
+
+// Check on window focus
+window.addEventListener('focus', validateSession);
+
+// Enhanced fetch wrapper to check for auth errors
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  return originalFetch.apply(this, args).then(response => {
+    // Check for authentication errors
+    if (response.status === 401 || response.status === 403) {
+      isRedirecting = true;
+      window.location.href = '/';
+      return Promise.reject(new Error('Session expired'));
+    }
+    return response;
+  }).catch(error => {
+    // If fetch fails and it's an auth-related error, redirect
+    if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
+      isRedirecting = true;
+      window.location.href = '/';
+    }
+    throw error;
+  });
+};
 
 // Profile dropdown handlers
 document.getElementById('profile-icon').addEventListener('click', function(e) {
