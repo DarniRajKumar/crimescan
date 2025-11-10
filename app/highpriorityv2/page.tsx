@@ -1010,7 +1010,7 @@ export default function HighPriorityV2Page(): JSX.Element {
       width: '100%'
     }}>
       <p style={{ margin: '50px 0 0 10px', fontSize: '11px', opacity: 0.8 }}>
-        © 2025 Local Command Centre. All rights reserved.
+        Valuepitch E Technologies Pvt. Ltd. Navi Mumbai – 400709 +91 8828813926 info@valuepitch.com
       </p>
     </footer>
     </>

@@ -2877,7 +2877,7 @@ fetch(\`/api/frappe/cases/\${docname}\`, {
   method: 'PUT',
   headers: {
     'Content-Type': 'application/json',
-    'X-Frappe-CSRF-Token': frappe.csrf_token || getCookie('csrftoken')
+    'X-Frappe-CSRF-Token': (typeof frappe !== 'undefined' && frappe.csrf_token) ? frappe.csrf_token : (getCookie('csrftoken') || '')
   },
   body: JSON.stringify({ 
     priority: 'High',
@@ -2886,17 +2886,20 @@ fetch(\`/api/frappe/cases/\${docname}\`, {
 })
 .then(response => {
   if (!response.ok) {
-    throw new Error('Network response was not ok');
+    return response.text().then(text => {
+      const message = text || \`Status \${response.status}\`;
+      throw new Error(message);
+    });
   }
   return response.json();
 })
 .then(() => {
-  console.log(\`Successfully updated priority to High and synopsis_status to ready to create\`);
+  console.log(\`Successfully updated priority to High and synopsis_status to Pending\`);
   // Find and update the case in our local data
   const caseIndex = allCases.findIndex(c => c.name === docname);
   if (caseIndex >= 0) {
     allCases[caseIndex].priority = 'High';
-    allCases[caseIndex].synopsis_status = 'ready to create';
+    allCases[caseIndex].synopsis_status = 'Pending';
   }
   
   // Re-render the current view to reflect changes
@@ -2922,7 +2925,7 @@ window.synopsisTimeout = setTimeout(() => {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'X-Frappe-CSRF-Token': frappe.csrf_token || getCookie('csrftoken')
+      'X-Frappe-CSRF-Token': (typeof frappe !== 'undefined' && frappe.csrf_token) ? frappe.csrf_token : (getCookie('csrftoken') || '')
     },
     body: JSON.stringify({ synopsis: newSynopsis })
   })
@@ -3323,7 +3326,7 @@ return function() {
 </script>
 <footer style="position: relative; bottom: 40px; text-align: right; color: #666666; font-size: 12px; font-style: italic; padding: 20px;">
   <p style="margin: 5px 0 0 0; font-size: 11px; opacity: 0.8;">
-    © 2025 Local Command Centre. All rights reserved.
+    Valuepitch E Technologies Pvt. Ltd. Navi Mumbai – 400709 +91 8828813926 info@valuepitch.com
   </p>
 </footer>
 </body>

@@ -2949,7 +2949,7 @@ window.fetch = function(...args) {
 </script>
 <footer style="position: relative; bottom: 40px; text-align: right; color: #666666; font-size: 12px; font-style: italic; padding: 20px;">
   <p style="margin: 5px 0 0 0; font-size: 11px; opacity: 0.8;">
-    © 2025 Local Command Centre. All rights reserved.
+    Valuepitch E Technologies Pvt. Ltd. Navi Mumbai – 400709 +91 8828813926 info@valuepitch.com
   </p>
 </footer>
 </body>
