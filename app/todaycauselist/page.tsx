@@ -268,7 +268,7 @@ export default function TodaysCauseListPage() {
         fontStyle: 'italic'
       }}>
         <p style={{ margin: '5px 0 0 0', fontSize: '11px', opacity: 0.8 }}>
-          Valuepitch E Technologies Pvt. Ltd. Navi Mumbai – 400709 +91 8828813926 info@valuepitch.com
+          Legal Command Centre (Powered by Valuepitch)
         </p>
       </footer>
     </div>

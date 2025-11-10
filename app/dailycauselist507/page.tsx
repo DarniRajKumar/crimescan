@@ -557,10 +557,42 @@ export default function DailyCauseList507Page() {
     margin-bottom: 20px;
   }
   
-  /* Loading spinner */
-  .loading {
-    text-align: center;
+  /* Loading overlay */
+  .loading-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
     padding: 40px 20px;
+  }
+  .loading-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 36px 48px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+  }
+  .loading-card h3 {
+    margin: 16px 0 8px;
+    font-size: 18px;
+    color: #2c3e50;
+    font-weight: 600;
+  }
+  .loading-card p {
+    margin: 4px 0;
+    color: #4a5a70;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .loading-card #loading-progress {
+    font-weight: 600;
+    color: #2563eb;
+  }
+  .loading-card #loading-status {
+    font-size: 13px;
+    color: #6b7280;
   }
   .loading-spinner {
     border: 4px solid rgba(0, 0, 0, 0.1);
@@ -1594,30 +1626,18 @@ function renderInitialState() {
 }
 
 function renderEmptyLoading() {
- console.log('Rendering skeleton table...');
+ console.log('Rendering loader overlay...');
  const container = document.getElementById('case-container');
  
- // Show skeleton table structure immediately (no spinner)
  container.innerHTML = \`
-  <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th class="serial-column">#</th>
-          <th>Item No</th>
-          <th>Case Info</th>
-          <th>Parties</th>
-          <th>AI Synopsis</th>
-          <th>Last Proceedings</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="cases-table-body">
-        <tr><td colspan="7" style="text-align: center; padding: 40px; color: #95a5a6;">Preparing data...</td></tr>
-      </tbody>
-    </table>
+  <div class="loading-overlay">
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <h3>Fetching the latest cause list</h3>
+      <p id="loading-progress">Initializing data pipeline...</p>
+      <p id="loading-status">This may take a few seconds.</p>
+    </div>
   </div>
-  <div id="pagination-container"></div>
  \`;
 }
 
@@ -3326,7 +3346,7 @@ return function() {
 </script>
 <footer style="position: relative; bottom: 40px; text-align: right; color: #666666; font-size: 12px; font-style: italic; padding: 20px;">
   <p style="margin: 5px 0 0 0; font-size: 11px; opacity: 0.8;">
-    Valuepitch E Technologies Pvt. Ltd. Navi Mumbai – 400709 +91 8828813926 info@valuepitch.com
+    Legal Command Centre (Powered by Valuepitch)
   </p>
 </footer>
 </body>

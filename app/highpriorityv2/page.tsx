@@ -609,7 +609,16 @@ export default function HighPriorityV2Page(): JSX.Element {
         </div>
 
         <div className="cases-content" id="casesContent">
-          {isLoading && <div className="loading">Loading cases...</div>}
+          {isLoading && (
+            <div className="hp-loading-overlay">
+              <div className="hp-loading-card">
+                <div className="hp-loading-spinner"></div>
+                <h3>Fetching the latest cases</h3>
+                <p id="hp-loading-progress">Hold tight while we prepare your insights.</p>
+                <p id="hp-loading-status">This should only take a moment.</p>
+              </div>
+            </div>
+          )}
           {!isLoading && error && (
             <div className="error">
               <div style={{ fontSize: "2rem", marginBottom: 10 }}>❌</div>
@@ -843,6 +852,50 @@ export default function HighPriorityV2Page(): JSX.Element {
           margin: 0;
         }
         .main-title i { color: #3498db; }
+        .hp-loading-overlay {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 220px;
+          padding: 40px 20px;
+          width: 100%;
+          flex: 1;
+        }
+        .hp-loading-card {
+          background: #ffffff;
+          border-radius: 16px;
+          padding: 32px 44px;
+          box-shadow: 0 18px 36px rgba(0, 0, 0, 0.12);
+          text-align: center;
+          max-width: 360px;
+          width: 100%;
+          margin: 0 auto;
+        }
+        .hp-loading-card h3 {
+          margin: 16px 0 8px;
+          font-size: 18px;
+          color: #1f2937;
+          font-weight: 600;
+        }
+        .hp-loading-card p {
+          margin: 4px 0;
+          color: #4b5563;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+        .hp-loading-spinner {
+          border: 4px solid rgba(37, 99, 235, 0.15);
+          border-top-color: #2563eb;
+          border-radius: 50%;
+          width: 46px;
+          height: 46px;
+          margin: 0 auto;
+          animation: hp-spin 1s linear infinite;
+        }
+        @keyframes hp-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
         @media (max-width: 768px) {
           .main-title { font-size: 18px; }
           .hpv2-container .header-title-section { gap: 2px; }
@@ -1010,7 +1063,7 @@ export default function HighPriorityV2Page(): JSX.Element {
       width: '100%'
     }}>
       <p style={{ margin: '50px 0 0 10px', fontSize: '11px', opacity: 0.8 }}>
-        Valuepitch E Technologies Pvt. Ltd. Navi Mumbai – 400709 +91 8828813926 info@valuepitch.com
+        Legal Command Centre (Powered by Valuepitch)
       </p>
     </footer>
     </>
