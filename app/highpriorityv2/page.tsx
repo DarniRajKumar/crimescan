@@ -380,8 +380,8 @@ export default function HighPriorityV2Page(): JSX.Element {
 
   const handleMyAccount = useCallback(() => {
     setShowDropdown(false);
-    alert('My Account feature coming soon!');
-  }, []);
+    router.push('/my-account');
+  }, [router]);
 
   const handleProfileClick = useCallback(() => {
     setShowDropdown(!showDropdown);

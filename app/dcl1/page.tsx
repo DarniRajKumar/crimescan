@@ -2907,7 +2907,7 @@ window.fetch = function(...args) {
  // My Account handler
  document.getElementById('my-account-item').addEventListener('click', function() {
    document.getElementById('profile-dropdown').classList.remove('show');
-   alert('My Account feature coming soon!');
+  window.location.href = '/my-account';
  });
 
  // Sign Out handler

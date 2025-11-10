@@ -189,7 +189,7 @@ export default function CaseSearchPage() {
 
   const handleMyAccount = () => {
     setShowDropdown(false)
-    alert('My Account feature coming soon!')
+    router.push('/my-account')
   }
 
   const handleProfileClick = () => {
