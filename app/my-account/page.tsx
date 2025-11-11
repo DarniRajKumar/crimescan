@@ -17,21 +17,6 @@ type ProfileResponse = {
   roles?: any[]
 }
 
-const ACTIONS = [
-  {
-    title: "Reset Password",
-    description: "Reset the password for your account",
-    label: "Reset Password",
-    href: "https://dev2.crimescan.ai/update-password",
-  },
-  {
-    title: "Manage third party apps",
-    description: "To manage your authorized third party apps",
-    label: "Manage your apps",
-    href: "https://dev2.crimescan.ai/app/connected-applications",
-  },
-]
-
 export default function MyAccountPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<ProfileResponse | null>(null)
@@ -174,19 +159,7 @@ export default function MyAccountPage() {
               </div>
             </section>
 
-            <section className="account-card action-card">
-              {ACTIONS.map((action) => (
-                <div key={action.title} className="action-row">
-                  <div>
-                    <h3>{action.title}</h3>
-                    <p>{action.description}</p>
-                  </div>
-                  <button className="link-btn" onClick={() => handleNavigation(action.href)}>
-                    {action.label}
-                  </button>
-                </div>
-              ))}
-            </section>
+            {/* Action items removed as per request */}
           </>
         )}
       </div>
