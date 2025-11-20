@@ -213,25 +213,25 @@ export default function TodaysCauseListPage() {
         </div>
 
         <div className="cards-grid">
-          <div className="court-card filtered-cases" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai.netlify.app/dailycauselist507' : '/dailycauselist507', '_blank')}>
+          <div className="court-card filtered-cases" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai-app.netlify.app/dailycauselist507' : '/dailycauselist507', '_blank')}>
             <div className="card-badge">Filtered</div>
             <h2>Filtered Cases</h2>
             <p>Browse through filtered and categorized court cases. Find specific cases based on criteria, case types, or other filtering parameters.</p>
           </div>
 
-          <div className="court-card all-cases" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai.netlify.app/dcl1' :'/dcl1', '_blank')}>
+          <div className="court-card all-cases" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai-app.netlify.app/dcl1' :'/dcl1', '_blank')}>
             <div className="card-badge">Live</div>
             <h2>All Court Cases</h2>
             <p>Access the complete list of all court cases scheduled for today. View comprehensive case details, timings, and courtroom assignments.</p>
           </div>
 
-          <div className="court-card case-search" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai.netlify.app/case-search' : '/case-search', '_blank')}>
+          <div className="court-card case-search" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai-app.netlify.app/case-search' : '/case-search', '_blank')}>
             <div className="card-badge">Search</div>
             <h2>Case Search</h2>
             <p>Search for specific court cases using various search criteria. Find cases by case number, party names, date range, or other parameters.</p>
           </div>
 
-          <div className="court-card high-priority-cases" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai.netlify.app/highpriorityv2' : '/highpriorityv2', '_blank')}>
+          <div className="court-card high-priority-cases" onClick={() => window.open(process.env.NODE_ENV === 'production' ? 'https://lcc-ai-app.netlify.app//highpriorityv2' : '/highpriorityv2', '_blank')}>
             <div className="card-badge priority-badge">Priority</div>
             <h2>High Priority Cases</h2>
             <p>Access urgent and high-priority court cases that require immediate attention. View time-sensitive cases and critical proceedings.</p>
