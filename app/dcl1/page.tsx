@@ -1344,7 +1344,16 @@ function updateLoadingProgress(current, total, message) {
    
    try {
      const res = await fetch('/api/resource/CCMS3?fields=["cause_list_date"]&limit=0');
+     
+     if (!res.ok) {
+       throw new Error(\`API error: \${res.status} \${res.statusText}\`);
+     }
+     
      const data = await res.json();
+     
+     if (!data || !data.data || !Array.isArray(data.data)) {
+       throw new Error('Invalid response format from API');
+     }
      
      const allDates = [...new Set(data.data
        .filter(d => d.cause_list_date)
@@ -1370,12 +1379,14 @@ function updateLoadingProgress(current, total, message) {
      fetchCasesForActiveTab(1);
    } catch (error) {
      console.error('Error fetching cause list dates:', error);
+     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
      document.getElementById('case-container').innerHTML = \`
        <div class="empty-state">
          <i class="fas fa-exclamation-triangle"></i>
          <h3>Error Loading Dates</h3>
-         <p>There was a problem fetching cause list dates. Please try again.</p>
-         <button class="btn btn-primary" onclick="fetchCauseDates()">
+         <p>There was a problem fetching cause list dates: \${errorMessage}</p>
+         <p style="font-size: 12px; color: #666; margin-top: 10px;">Please check your connection and try again.</p>
+         <button class="btn btn-primary" onclick="fetchCauseDates()" style="margin-top: 15px;">
            <i class="fas fa-sync-alt"></i> Retry
          </button>
        </div>
@@ -1395,8 +1406,16 @@ async function fetchAllTabCounts() {
       const previousFilter = \`[["cause_list_date","=","\${causeDates.previous}"]]\`;
       countPromises.push(
         fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(previousFilter)}&limit=0\`, { cache: 'no-store' })
-          .then(r => r.json())
+          .then(r => {
+            if (!r.ok) {
+              throw new Error(\`API error: \${r.status} \${r.statusText}\`);
+            }
+            return r.json();
+          })
           .then(data => {
+            if (!data || !data.data || !Array.isArray(data.data)) {
+              throw new Error('Invalid response format');
+            }
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
             tabCounts['previous_cause_list'] = relevant.length;
             console.log(\`Previous Cause List count: \${relevant.length}\`);
@@ -1412,8 +1431,16 @@ async function fetchAllTabCounts() {
     const todayFilter = \`[["cause_list_date","=","\${causeDates.today}"]]\`;
     countPromises.push(
       fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(todayFilter)}&limit=0\`, { cache: 'no-store' })
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) {
+            throw new Error(\`API error: \${r.status} \${r.statusText}\`);
+          }
+          return r.json();
+        })
         .then(data => {
+          if (!data || !data.data || !Array.isArray(data.data)) {
+            throw new Error('Invalid response format');
+          }
           const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
           tabCounts['today_cause_list'] = relevant.length;
           console.log(\`Today's Cause List count: \${relevant.length}\`);
@@ -1429,8 +1456,16 @@ async function fetchAllTabCounts() {
       const nextFilter = \`[["cause_list_date","=","\${causeDates.next}"]]\`;
       countPromises.push(
         fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(nextFilter)}&limit=0\`, { cache: 'no-store' })
-          .then(r => r.json())
+          .then(r => {
+            if (!r.ok) {
+              throw new Error(\`API error: \${r.status} \${r.statusText}\`);
+            }
+            return r.json();
+          })
           .then(data => {
+            if (!data || !data.data || !Array.isArray(data.data)) {
+              throw new Error('Invalid response format');
+            }
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
             tabCounts['next_cause_list'] = relevant.length;
             console.log(\`Next Cause List count: \${relevant.length}\`);
@@ -1447,8 +1482,16 @@ async function fetchAllTabCounts() {
       const lastWeekFilter = \`[["cause_list_date","in",\${JSON.stringify(causeDates.lastWeek)}]]\`;
       countPromises.push(
         fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(lastWeekFilter)}&limit=0\`, { cache: 'no-store' })
-          .then(r => r.json())
+          .then(r => {
+            if (!r.ok) {
+              throw new Error(\`API error: \${r.status} \${r.statusText}\`);
+            }
+            return r.json();
+          })
           .then(data => {
+            if (!data || !data.data || !Array.isArray(data.data)) {
+              throw new Error('Invalid response format');
+            }
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
             tabCounts['last_week_cause_list'] = relevant.length;
             console.log(\`Last Week's Cause List count: \${relevant.length}\`);
@@ -1549,7 +1592,16 @@ async function fetchAllTabCounts() {
      // Fetch only the current page from API (server-side pagination)
      const apiUrl = \`/api/resource/CCMS3?filters=\${encodeURIComponent(filtersJson)}&limit=\${recordsPerPage}&limit_start=\${limitStart}\`;
      const res = await fetch(apiUrl, { cache: 'no-store' });
+     
+     if (!res.ok) {
+       throw new Error(\`API error: \${res.status} \${res.statusText}\`);
+     }
+     
      const data = await res.json();
+     
+     if (!data || !data.data || !Array.isArray(data.data)) {
+       throw new Error('Invalid response format from API');
+     }
      
      // Filter out cases marked as not relevant
      const relevantCases = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
@@ -1560,15 +1612,28 @@ async function fetchAllTabCounts() {
      const pageDetails = await Promise.all(
        relevantCases.map(doc =>
          fetch(\`/api/resource/CCMS3/\${doc.name}\`, { cache: 'no-store' })
-           .then(r => r.json())
+           .then(r => {
+             if (!r.ok) {
+               throw new Error(\`Failed to fetch case \${doc.name}: \${r.status} \${r.statusText}\`);
+             }
+             return r.json();
+           })
            .then(d => {
-            return d.data;
-          })
+             if (!d || !d.data) {
+               console.warn(\`No data for case \${doc.name}\`);
+               return null;
+             }
+             return d.data;
+           })
+           .catch(err => {
+             console.error(\`Error fetching case \${doc.name}:\`, err);
+             return null;
+           })
        )
      );
      
-     // Filter out not relevant cases from details
-     const fullCases = pageDetails.filter(d => (d.relevancy || '').toLowerCase() !== 'not relevant');
+     // Filter out null results and not relevant cases from details
+     const fullCases = pageDetails.filter(d => d && (d.relevancy || '').toLowerCase() !== 'not relevant');
      
      // Store this page's data in cache
      pageDataCache[page] = fullCases;
@@ -1588,7 +1653,16 @@ async function fetchAllTabCounts() {
          // Fetch total count by making a query with limit=0
          const countUrl = \`/api/resource/CCMS3?filters=\${encodeURIComponent(filtersJson)}&limit=0\`;
          const countRes = await fetch(countUrl, { cache: 'no-store' });
+         
+         if (!countRes.ok) {
+           throw new Error(\`Count API error: \${countRes.status} \${countRes.statusText}\`);
+         }
+         
          const countData = await countRes.json();
+         
+         if (!countData || !countData.data || !Array.isArray(countData.data)) {
+           throw new Error('Invalid count response format');
+         }
          
          // Filter out not relevant cases
          const allRelevantInRange = (countData.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
@@ -1634,12 +1708,14 @@ async function fetchAllTabCounts() {
      renderTabs();
    } catch (error) {
      console.error('Error loading cases:', error);
+     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
      document.getElementById('case-container').innerHTML = \`
        <div class="empty-state">
          <i class="fas fa-exclamation-triangle"></i>
          <h3>Error Loading Cases</h3>
-         <p>There was a problem fetching case data. Please try again.</p>
-         <button class="btn btn-primary" onclick="fetchCasesForActiveTab(1)">
+         <p>There was a problem fetching case data: \${errorMessage}</p>
+         <p style="font-size: 12px; color: #666; margin-top: 10px;">Please check your connection and try again.</p>
+         <button class="btn btn-primary" onclick="fetchCasesForActiveTab(1)" style="margin-top: 15px;">
            <i class="fas fa-sync-alt"></i> Retry
          </button>
        </div>
