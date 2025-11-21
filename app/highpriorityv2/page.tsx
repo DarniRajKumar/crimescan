@@ -715,6 +715,15 @@ export default function HighPriorityV2Page(): JSX.Element {
                         </button>
                       ) : null}
                       <button
+                        className="btn btn-info"
+                        onClick={() => {
+                          // Placeholder for latest status action
+                          alert(`Latest Status for case "${c.name || ""}"\nCase Status: ${c.case_status || "N/A"}\nCase Stage: ${c.case_stage || "N/A"}\nSynopsis Status: ${c.synopsis_status || "N/A"}`);
+                        }}
+                      >
+                        📊 Latest Status
+                      </button>
+                      <button
                         className="btn btn-warning"
                         onClick={() => alert(`Alert sent for case "${c.name || ""}"`)}
                       >

@@ -1234,6 +1234,11 @@ body {
   color: white;
 }
 
+.hpv2-container .btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
 .hpv2-container .btn-secondary {
   background: #6c757d;
   color: white;
