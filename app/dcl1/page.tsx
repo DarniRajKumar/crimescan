@@ -1405,7 +1405,7 @@ async function fetchAllTabCounts() {
     if (causeDates.previous) {
       const previousFilter = \`[["cause_list_date","=","\${causeDates.previous}"]]\`;
       countPromises.push(
-        fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(previousFilter)}&limit=0\`, { cache: 'no-store' })
+        fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(previousFilter)}&limit=100000\`, { cache: 'no-store' })
           .then(r => {
             if (!r.ok) {
               throw new Error(\`API error: \${r.status} \${r.statusText}\`);
@@ -1416,6 +1416,7 @@ async function fetchAllTabCounts() {
             if (!data || !data.data || !Array.isArray(data.data)) {
               throw new Error('Invalid response format');
             }
+            // Filter out "not relevant" cases to match local behavior
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
             tabCounts['previous_cause_list'] = relevant.length;
             console.log(\`Previous Cause List count: \${relevant.length}\`);
@@ -1430,7 +1431,7 @@ async function fetchAllTabCounts() {
     // Today's Cause List count
     const todayFilter = \`[["cause_list_date","=","\${causeDates.today}"]]\`;
     countPromises.push(
-      fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(todayFilter)}&limit=0\`, { cache: 'no-store' })
+      fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(todayFilter)}&limit=100000\`, { cache: 'no-store' })
         .then(r => {
           if (!r.ok) {
             throw new Error(\`API error: \${r.status} \${r.statusText}\`);
@@ -1441,6 +1442,7 @@ async function fetchAllTabCounts() {
           if (!data || !data.data || !Array.isArray(data.data)) {
             throw new Error('Invalid response format');
           }
+          // Filter out "not relevant" cases to match local behavior
           const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
           tabCounts['today_cause_list'] = relevant.length;
           console.log(\`Today's Cause List count: \${relevant.length}\`);
@@ -1455,7 +1457,7 @@ async function fetchAllTabCounts() {
     if (causeDates.next) {
       const nextFilter = \`[["cause_list_date","=","\${causeDates.next}"]]\`;
       countPromises.push(
-        fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(nextFilter)}&limit=0\`, { cache: 'no-store' })
+        fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(nextFilter)}&limit=100000\`, { cache: 'no-store' })
           .then(r => {
             if (!r.ok) {
               throw new Error(\`API error: \${r.status} \${r.statusText}\`);
@@ -1466,6 +1468,7 @@ async function fetchAllTabCounts() {
             if (!data || !data.data || !Array.isArray(data.data)) {
               throw new Error('Invalid response format');
             }
+            // Filter out "not relevant" cases to match local behavior
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
             tabCounts['next_cause_list'] = relevant.length;
             console.log(\`Next Cause List count: \${relevant.length}\`);
@@ -1481,7 +1484,7 @@ async function fetchAllTabCounts() {
     if (causeDates.lastWeek.length > 0) {
       const lastWeekFilter = \`[["cause_list_date","in",\${JSON.stringify(causeDates.lastWeek)}]]\`;
       countPromises.push(
-        fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(lastWeekFilter)}&limit=0\`, { cache: 'no-store' })
+        fetch(\`/api/resource/CCMS3?filters=\${encodeURIComponent(lastWeekFilter)}&limit=100000\`, { cache: 'no-store' })
           .then(r => {
             if (!r.ok) {
               throw new Error(\`API error: \${r.status} \${r.statusText}\`);
@@ -1492,6 +1495,7 @@ async function fetchAllTabCounts() {
             if (!data || !data.data || !Array.isArray(data.data)) {
               throw new Error('Invalid response format');
             }
+            // Filter out "not relevant" cases to match local behavior
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
             tabCounts['last_week_cause_list'] = relevant.length;
             console.log(\`Last Week's Cause List count: \${relevant.length}\`);
@@ -1679,8 +1683,8 @@ async function fetchAllTabCounts() {
      // Fetch accurate total count when loading page 1
      if (page === 1) {
        try {
-         // Fetch total count by making a query with limit=0
-         const countUrl = \`/api/resource/CCMS3?filters=\${encodeURIComponent(filtersJson)}&limit=0\`;
+        // Fetch total count by making a query with large limit to get all records
+        const countUrl = \`/api/resource/CCMS3?filters=\${encodeURIComponent(filtersJson)}&limit=100000\`;
          const countRes = await fetch(countUrl, { cache: 'no-store' });
          
          if (!countRes.ok) {
