@@ -82,6 +82,19 @@ function formatDate(dateStr?: string): string {
   });
 }
 
+function formatDateDDMMYYYY(dateStr?: string): string {
+  if (!dateStr) return "Not scheduled";
+  try {
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch {
+    return "Invalid date";
+  }
+}
+
 function getCaseStatus(hearingDate?: string): "overdue" | "today" | "tomorrow" | "upcoming" | "" {
   if (!hearingDate) return "";
   const today = toISODateOnly(new Date());
@@ -386,6 +399,52 @@ export default function HighPriorityV2Page(): JSX.Element {
   const handleProfileClick = useCallback(() => {
     setShowDropdown(!showDropdown);
   }, [showDropdown]);
+
+  const handleLatestStatus = useCallback(async (caseId?: string, caseName?: string) => {
+    if (!caseId) {
+      alert(`Latest Status for case "${caseName || ""}"\nCase Status: N/A\nCase Stage: N/A\nSynopsis Status: N/A\nNext Hearing Date: N/A`);
+      return;
+    }
+
+    try {
+      const headers: Record<string, string> = {
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      };
+      // Best-effort pass-through of Frappe CSRF if present in global scope
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const maybeFrappe = (globalThis as any)?.frappe;
+      if (maybeFrappe?.csrf_token) {
+        headers["X-Frappe-CSRF-Token"] = String(maybeFrappe.csrf_token);
+      }
+
+      const response = await fetch(`/api/frappe/cases/${caseId}`, {
+        method: "GET",
+        credentials: "include",
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as { data?: Ccms2Case };
+      const caseData = data.data || data as Ccms2Case;
+      
+      const nextHearingDate = formatDateDDMMYYYY(caseData.next_hearing_date);
+      
+      alert(
+        `Latest Status for case "${caseName || caseId}"\n\n` +
+        `Case Status: ${caseData.case_status || "N/A"}\n` +
+        `Case Stage: ${caseData.case_stage || "N/A"}\n` +
+        `Synopsis Status: ${caseData.synopsis_status || "N/A"}\n` +
+        `Next Hearing Date: ${nextHearingDate}`
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      alert(`Error fetching latest status: ${message}`);
+    }
+  }, []);
 
   useEffect(() => {
     // Set page title
@@ -716,10 +775,7 @@ export default function HighPriorityV2Page(): JSX.Element {
                       ) : null}
                       <button
                         className="btn btn-info"
-                        onClick={() => {
-                          // Placeholder for latest status action
-                          alert(`Latest Status for case "${c.name || ""}"\nCase Status: ${c.case_status || "N/A"}\nCase Stage: ${c.case_stage || "N/A"}\nSynopsis Status: ${c.synopsis_status || "N/A"}`);
-                        }}
+                        onClick={() => handleLatestStatus(c.name, c.name)}
                       >
                         📊 Latest Status
                       </button>

@@ -1604,9 +1604,30 @@ async function fetchAllTabCounts() {
      }
      
      // Filter out cases marked as not relevant
-     const relevantCases = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
+     const relevantCases = (data.data || []).filter(doc => {
+       const relevancy = (doc.relevancy || '').toLowerCase();
+       return relevancy !== 'not relevant';
+     });
      
-     console.log(\`Fetched \${relevantCases.length} cases for page \${page} (offset: \${limitStart})\`);
+     console.log(\`Fetched \${data.data?.length || 0} total cases, \${relevantCases.length} relevant cases for page \${page} (offset: \${limitStart})\`);
+     
+     if (relevantCases.length === 0) {
+       console.warn(\`No relevant cases found for page \${page}. Total cases fetched: \${data.data?.length || 0}\`);
+       // Still create empty cache entry to prevent re-fetching
+       pageDataCache[page] = [];
+       fetchedPages.add(page);
+       allCases = [];
+       Object.keys(pageDataCache).sort((a, b) => parseInt(a) - parseInt(b)).forEach(pageNum => {
+         allCases = allCases.concat(pageDataCache[pageNum]);
+       });
+       filteredCases = allCases;
+       
+       // If this is page 1 and we have no cases, check if there are any cases at all
+       if (page === 1) {
+         console.log('No cases on page 1, checking total count...');
+         // The count fetch below will handle this
+       }
+     }
      
      // Fetch full details for all cases in this page (silently, no progress updates)
      const pageDetails = await Promise.all(
@@ -1633,9 +1654,15 @@ async function fetchAllTabCounts() {
      );
      
      // Filter out null results and not relevant cases from details
-     const fullCases = pageDetails.filter(d => d && (d.relevancy || '').toLowerCase() !== 'not relevant');
+     const fullCases = pageDetails.filter(d => {
+       if (!d) return false;
+       const relevancy = (d.relevancy || '').toLowerCase();
+       return relevancy !== 'not relevant';
+     });
      
-     // Store this page's data in cache
+     console.log(\`After fetching details: \${fullCases.length} valid cases from \${pageDetails.length} fetched\`);
+     
+     // Store this page's data in cache (even if empty, to prevent re-fetching)
      pageDataCache[page] = fullCases;
      fetchedPages.add(page);
      
@@ -1646,6 +1673,8 @@ async function fetchAllTabCounts() {
      });
      
      filteredCases = allCases;
+     
+     console.log(\`After caching page \${page}: allCases.length = \${allCases.length}, totalCasesInRange = \${totalCasesInRange}\`);
      
      // Fetch accurate total count when loading page 1
      if (page === 1) {
@@ -2005,6 +2034,9 @@ function hasActiveFilters() {
  }
  
  function getCurrentTabCases() {
+   // With server-side pagination, allCases already contains cases for the current tab
+   // since fetchCasesForActiveTab filters by date before fetching
+   // So we can just return allCases directly, or filter by date if needed for safety
    let targetDates = [];
    
    if (activeTab === 'previous_cause_list') {
@@ -2017,7 +2049,14 @@ function hasActiveFilters() {
      targetDates = causeDates.lastWeek;
    }
    
-   return targetDates.length > 0 ? allCases.filter(d => targetDates.includes(d.cause_list_date)) : [];
+   // If we have target dates, filter by them. Otherwise return all cases (they're already filtered by the API)
+   if (targetDates.length > 0) {
+     const filtered = allCases.filter(d => targetDates.includes(d.cause_list_date));
+     // If filtering results in empty array but allCases has data, return allCases (API already filtered correctly)
+     return filtered.length > 0 ? filtered : allCases;
+   }
+   
+   return allCases;
  }
  
  function clearFilters() {
@@ -2071,12 +2110,29 @@ function applyFilters() {
  
  function renderCases() {
    console.log(\`Rendering cases for \${activeTab}...\`);
+   console.log(\`allCases length: \${allCases.length}, pageDataCache pages: \${Object.keys(pageDataCache).length}, currentPage: \${currentPage}\`);
    
    const container = document.getElementById('case-container');
    
+   // If allCases is empty and we're using server-side pagination, use cached page data directly
    let casesToDisplay = getCurrentTabCases();
    
-   console.log(\`Found \${casesToDisplay.length} cases for the current tab\`);
+   // If we have cached page data but allCases is empty, use the current page's cache
+   if (casesToDisplay.length === 0 && pageDataCache[currentPage] && pageDataCache[currentPage].length > 0) {
+     console.log(\`Using cached page data for page \${currentPage}: \${pageDataCache[currentPage].length} cases\`);
+     casesToDisplay = pageDataCache[currentPage];
+   }
+   
+   // Also check other cached pages if current page is empty
+   if (casesToDisplay.length === 0 && Object.keys(pageDataCache).length > 0) {
+     const firstCachedPage = Object.keys(pageDataCache).sort((a, b) => parseInt(a) - parseInt(b))[0];
+     if (pageDataCache[firstCachedPage] && pageDataCache[firstCachedPage].length > 0) {
+       console.log(\`Using first cached page \${firstCachedPage} data: \${pageDataCache[firstCachedPage].length} cases\`);
+       casesToDisplay = pageDataCache[firstCachedPage];
+     }
+   }
+   
+   console.log(\`Found \${casesToDisplay.length} cases for the current tab after all checks\`);
    
    const priorityFilter = document.getElementById('priority-filter')?.value;
    const caseAgeFilter = document.getElementById('case-age-filter')?.value;
@@ -2179,14 +2235,27 @@ function applyFilters() {
   // Note: Don't reset currentPage here - it should only be reset when filters actually change
   // This allows pagination to work properly when navigating between pages
   
-  if (casesToDisplay.length === 0) {
+  // Check if we're still loading data (no cases but we have a total count or cached pages)
+  const filtersActive = hasActiveFilters();
+  const isStillLoading = !filtersActive && casesToDisplay.length === 0 && 
+    (totalCasesInRange > 0 || Object.keys(pageDataCache).length > 0);
+  
+  if (casesToDisplay.length === 0 && !isStillLoading) {
+    // Only show "No Cases Found" if we're not still loading and filters might be active
     container.innerHTML = \`
       <div class="empty-state">
         <i class="fas fa-search"></i>
         <h3>No Cases Found</h3>
-        <p>No cases match your current filter criteria.</p>
+        <p>\${filtersActive ? 'No cases match your current filter criteria.' : 'No cases available for this date range.'}</p>
+        \${filtersActive ? '<button class="btn btn-primary" onclick="clearFilters()" style="margin-top: 15px;"><i class="fas fa-times-circle"></i> Clear Filters</button>' : ''}
       </div>
     \`;
+    return;
+  }
+  
+  // If still loading, show loading state instead of empty state
+  if (isStillLoading && casesToDisplay.length === 0) {
+    renderEmptyLoading();
     return;
   }
   
