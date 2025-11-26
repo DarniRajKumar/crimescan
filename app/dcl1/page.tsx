@@ -1418,8 +1418,15 @@ async function fetchAllTabCounts() {
             }
             // Filter out "not relevant" cases to match local behavior
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
-            tabCounts['previous_cause_list'] = relevant.length;
-            console.log(\`Previous Cause List count: \${relevant.length}\`);
+            const count = relevant.length;
+            // Only update if count is reasonable (prevent showing 84000+ incorrectly)
+            // Typical counts are in hundreds, so 10000 is a safe upper limit
+            if (count <= 10000) {
+              tabCounts['previous_cause_list'] = count;
+              console.log(\`Previous Cause List count: \${count}\`);
+            } else {
+              console.warn(\`Previous Cause List count seems incorrect (\${count}), keeping previous value\`);
+            }
           })
           .catch(err => {
             console.warn('Error fetching previous count:', err);
@@ -1444,8 +1451,15 @@ async function fetchAllTabCounts() {
           }
           // Filter out "not relevant" cases to match local behavior
           const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
-          tabCounts['today_cause_list'] = relevant.length;
-          console.log(\`Today's Cause List count: \${relevant.length}\`);
+          const count = relevant.length;
+          // Only update if count is reasonable (prevent showing 84000+ incorrectly)
+          // Typical counts are in hundreds, so 10000 is a safe upper limit
+          if (count <= 10000) {
+            tabCounts['today_cause_list'] = count;
+            console.log(\`Today's Cause List count: \${count}\`);
+          } else {
+            console.warn(\`Today's Cause List count seems incorrect (\${count}), keeping previous value\`);
+          }
         })
         .catch(err => {
           console.warn('Error fetching today count:', err);
@@ -1470,8 +1484,15 @@ async function fetchAllTabCounts() {
             }
             // Filter out "not relevant" cases to match local behavior
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
-            tabCounts['next_cause_list'] = relevant.length;
-            console.log(\`Next Cause List count: \${relevant.length}\`);
+            const count = relevant.length;
+            // Only update if count is reasonable (prevent showing 84000+ incorrectly)
+            // Typical counts are in hundreds, so 10000 is a safe upper limit
+            if (count <= 10000) {
+              tabCounts['next_cause_list'] = count;
+              console.log(\`Next Cause List count: \${count}\`);
+            } else {
+              console.warn(\`Next Cause List count seems incorrect (\${count}), keeping previous value\`);
+            }
           })
           .catch(err => {
             console.warn('Error fetching next count:', err);
@@ -1497,8 +1518,15 @@ async function fetchAllTabCounts() {
             }
             // Filter out "not relevant" cases to match local behavior
             const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
-            tabCounts['last_week_cause_list'] = relevant.length;
-            console.log(\`Last Week's Cause List count: \${relevant.length}\`);
+            const count = relevant.length;
+            // Only update if count is reasonable (prevent showing 84000+ incorrectly)
+            // Typical counts are in hundreds, so 10000 is a safe upper limit
+            if (count <= 10000) {
+              tabCounts['last_week_cause_list'] = count;
+              console.log(\`Last Week's Cause List count: \${count}\`);
+            } else {
+              console.warn(\`Last Week's Cause List count seems incorrect (\${count}), keeping previous value\`);
+            }
           })
           .catch(err => {
             console.warn('Error fetching last week count:', err);
@@ -1719,12 +1747,12 @@ async function fetchAllTabCounts() {
        console.log(\`Updated total count to \${totalCasesInRange} (found last page)\`);
      }
      
-     console.log(\`Page \${page} loaded successfully. Total cases in range: \${totalCasesInRange}\`);
-     
-     // Update the count for the current tab in tabCounts
-     if (activeTab && tabCounts.hasOwnProperty(activeTab)) {
-       tabCounts[activeTab] = totalCasesInRange;
-     }
+    console.log(\`Page \${page} loaded successfully. Total cases in range: \${totalCasesInRange}\`);
+    
+    // Don't update tabCounts from totalCasesInRange here
+    // tabCounts is already set correctly by fetchAllTabCounts() which runs before this
+    // Updating it here can overwrite correct counts with incorrect large values (84000+)
+    // when the count query returns all records due to filter issues
      
      // Now render the current page
      populateFilterOptions();
