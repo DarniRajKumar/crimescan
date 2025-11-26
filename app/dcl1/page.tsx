@@ -1416,8 +1416,10 @@ async function fetchAllTabCounts() {
             if (!data || !data.data || !Array.isArray(data.data)) {
               throw new Error('Invalid response format');
             }
-            // Filter out "not relevant" cases to match local behavior
-            const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
+            // Filter out "not relevant" cases and cases without names to match local behavior
+            const relevant = (data.data || []).filter(doc => 
+              (doc.relevancy || '').toLowerCase() !== 'not relevant' && doc && doc.name
+            );
             const count = relevant.length;
             // Only update if count is reasonable (prevent showing 84000+ incorrectly)
             // Typical counts are in hundreds, so 10000 is a safe upper limit
@@ -1482,8 +1484,10 @@ async function fetchAllTabCounts() {
             if (!data || !data.data || !Array.isArray(data.data)) {
               throw new Error('Invalid response format');
             }
-            // Filter out "not relevant" cases to match local behavior
-            const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
+            // Filter out "not relevant" cases and cases without names to match local behavior
+            const relevant = (data.data || []).filter(doc => 
+              (doc.relevancy || '').toLowerCase() !== 'not relevant' && doc && doc.name
+            );
             const count = relevant.length;
             // Only update if count is reasonable (prevent showing 84000+ incorrectly)
             // Typical counts are in hundreds, so 10000 is a safe upper limit
@@ -1516,8 +1520,10 @@ async function fetchAllTabCounts() {
             if (!data || !data.data || !Array.isArray(data.data)) {
               throw new Error('Invalid response format');
             }
-            // Filter out "not relevant" cases to match local behavior
-            const relevant = (data.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
+            // Filter out "not relevant" cases and cases without names to match local behavior
+            const relevant = (data.data || []).filter(doc => 
+              (doc.relevancy || '').toLowerCase() !== 'not relevant' && doc && doc.name
+            );
             const count = relevant.length;
             // Only update if count is reasonable (prevent showing 84000+ incorrectly)
             // Typical counts are in hundreds, so 10000 is a safe upper limit
@@ -1661,29 +1667,31 @@ async function fetchAllTabCounts() {
        }
      }
      
-     // Fetch full details for all cases in this page (silently, no progress updates)
-     const pageDetails = await Promise.all(
-       relevantCases.map(doc =>
-         fetch(\`/api/resource/CCMS3/\${doc.name}\`, { cache: 'no-store' })
-           .then(r => {
-             if (!r.ok) {
-               throw new Error(\`Failed to fetch case \${doc.name}: \${r.status} \${r.statusText}\`);
-             }
-             return r.json();
-           })
-           .then(d => {
-             if (!d || !d.data) {
-               console.warn(\`No data for case \${doc.name}\`);
-               return null;
-             }
-             return d.data;
-           })
-           .catch(err => {
-             console.error(\`Error fetching case \${doc.name}:\`, err);
-             return null;
-           })
-       )
-     );
+    // Fetch full details for all cases in this page (silently, no progress updates)
+    const pageDetails = await Promise.all(
+      relevantCases
+        .filter(doc => doc && doc.name) // Filter out cases without a name
+        .map(doc =>
+          fetch(\`/api/resource/CCMS3/\${doc.name}\`, { cache: 'no-store' })
+            .then(r => {
+              if (!r.ok) {
+                throw new Error(\`Failed to fetch case \${doc.name}: \${r.status} \${r.statusText}\`);
+              }
+              return r.json();
+            })
+            .then(d => {
+              if (!d || !d.data) {
+                console.warn(\`No data for case \${doc.name}\`);
+                return null;
+              }
+              return d.data;
+            })
+            .catch(err => {
+              console.error(\`Error fetching case \${doc.name}:\`, err);
+              return null;
+            })
+        )
+    );
      
      // Filter out null results and not relevant cases from details
      const fullCases = pageDetails.filter(d => {
@@ -1725,9 +1733,18 @@ async function fetchAllTabCounts() {
            throw new Error('Invalid count response format');
          }
          
-         // Filter out not relevant cases
-         const allRelevantInRange = (countData.data || []).filter(doc => (doc.relevancy || '').toLowerCase() !== 'not relevant');
+         // Filter out not relevant cases and cases without names to match local behavior
+         const allRelevantInRange = (countData.data || []).filter(doc => 
+           (doc.relevancy || '').toLowerCase() !== 'not relevant' && doc && doc.name
+         );
          totalCasesInRange = allRelevantInRange.length;
+         
+         // Update the active tab's count to match what we actually loaded
+         if (activeTab && tabCounts[activeTab] !== undefined) {
+           tabCounts[activeTab] = totalCasesInRange;
+           console.log(\`Updated tab count for \${activeTab}: \${totalCasesInRange}\`);
+           renderTabs(); // Update the UI with the new count
+         }
          console.log(\`Fetched accurate total count: \${totalCasesInRange} cases in date range\`);
        } catch (countError) {
          console.warn('Could not fetch total count, using estimate:', countError);
@@ -2359,12 +2376,15 @@ function applyFilters() {
        const itemB = parseInt(b.item_no) || 0;
        return itemA - itemB;
      });
-   } else {
-     // Client-side pagination or all data loaded: slice from sorted data
-     paginatedCases = sortedCases.slice(startIndex, endIndex);
-   }
+  } else {
+    // Client-side pagination or all data loaded: slice from sorted data
+    paginatedCases = sortedCases.slice(startIndex, endIndex);
+  }
 
-   console.log(\`Showing page \${currentPage} of \${totalPages}: records \${startIndex + 1} to \${Math.min(endIndex, totalAvailableCases)} of \${totalAvailableCases} (loaded: \${sortedCases.length})\`);
+  // Filter out cases without valid names to prevent undefined API calls
+  paginatedCases = paginatedCases.filter(caseDoc => caseDoc && caseDoc.name);
+
+  console.log(\`Showing page \${currentPage} of \${totalPages}: records \${startIndex + 1} to \${Math.min(endIndex, totalAvailableCases)} of \${totalAvailableCases} (loaded: \${sortedCases.length})\`);
 
    container.innerHTML = \`
      <div class="table-responsive">
@@ -2406,10 +2426,10 @@ function applyFilters() {
            <i class="fas fa-external-link-alt"></i> View
          </a>\` : '';
        
-       const viewPrayerLink = caseDoc.prayer ? 
-         \`<span class="prayer-link" onclick="openPrayerModal('\${caseDoc.name}'); event.preventDefault(); return false;">
-           View Prayer
-         </span>\` : '';
+      const viewPrayerLink = (caseDoc.prayer && caseDoc.name) ? 
+        \`<span class="prayer-link" onclick="openPrayerModal('\${caseDoc.name}'); event.preventDefault(); return false;">
+          View Prayer
+        </span>\` : '';
        
        const orderLink = caseDoc.order_link ? 
          \`<a href="\${caseDoc.order_link}" target="_blank" class="btn btn-sm btn-success">
@@ -2445,24 +2465,24 @@ function applyFilters() {
          <strong>Pet:</strong> \${caseDoc.pet_name || 'Unknown'}
          <br><strong>Res:</strong> \${caseDoc.res_name || 'Unknown'}
        </td>
-       <td>
-         <div class="synopsis-editable" contenteditable="true" oninput="saveEdits('\${caseDoc.name}', this.innerText)" tabindex="0">
-           \${caseDoc.synopsis || 'Click to edit'}
-         </div>
-       </td>
-       <td>
-         \${caseDoc.last_proceedings || 'No proceedings recorded'} 
-         \${orderLink}
-       </td>
-       <td>
-         <button class="btn btn-danger btn-sm" onclick="setHighPriority('\${caseDoc.name}')" style="margin-bottom: 10px;">
-           <i class="fas fa-exclamation-circle"></i> High Priority
-         </button>
-         <br>
-         <button class="btn btn-primary btn-sm" onclick="openAlertModal('\${caseDoc.name}')">
-           <i class="fas fa-bell"></i> Send Alert
-         </button>
-       </td>
+      <td>
+        <div class="synopsis-editable" contenteditable="true" oninput="saveEdits('\${caseDoc.name || ''}', this.innerText)" tabindex="0">
+          \${caseDoc.synopsis || 'Click to edit'}
+        </div>
+      </td>
+      <td>
+        \${caseDoc.last_proceedings || 'No proceedings recorded'} 
+        \${orderLink}
+      </td>
+      <td>
+        \${caseDoc.name ? \`<button class="btn btn-danger btn-sm" onclick="setHighPriority('\${caseDoc.name}')" style="margin-bottom: 10px;">
+          <i class="fas fa-exclamation-circle"></i> High Priority
+        </button>
+        <br>
+        <button class="btn btn-primary btn-sm" onclick="openAlertModal('\${caseDoc.name}')">
+          <i class="fas fa-bell"></i> Send Alert
+        </button>\` : '<span class="text-muted">No case ID</span>'}
+      </td>
      \`;
      tableBody.appendChild(tr);
      
@@ -2606,10 +2626,16 @@ function goToPageInput() {
   goToPage(page);
 }
 
- function openPrayerModal(docname) {
-   console.log(\`Opening prayer modal for case \${docname}\`);
-   
-   const currentCase = allCases.find(c => c.name === docname);
+function openPrayerModal(docname) {
+  if (!docname || docname === 'undefined' || docname === 'null') {
+    console.error('Cannot open prayer modal: docname is invalid', docname);
+    showNotification('Invalid case ID', 'error');
+    return;
+  }
+  
+  console.log(\`Opening prayer modal for case \${docname}\`);
+  
+  const currentCase = allCases.find(c => c.name === docname);
    if (currentCase && currentCase.prayer) {
      document.getElementById('prayer-content').textContent = currentCase.prayer;
    } else {
@@ -2714,10 +2740,16 @@ function goToPageInput() {
    });
  }
  
- function setHighPriority(docname) {
-   console.log(\`Setting priority for case \${docname} to High\`);
-   
-   fetch(\`/api/resource/CCMS3/\${docname}\`, {
+function setHighPriority(docname) {
+  if (!docname || docname === 'undefined' || docname === 'null') {
+    console.error('Cannot set priority: docname is invalid', docname);
+    showNotification('Invalid case ID', 'error');
+    return;
+  }
+  
+  console.log(\`Setting priority for case \${docname} to High\`);
+  
+  fetch(\`/api/resource/CCMS3/\${docname}\`, {
      method: 'PUT',
      headers: {
        'Content-Type': 'application/json',
@@ -2753,12 +2785,17 @@ function goToPageInput() {
    });
  }
  
- function saveEdits(docname, newSynopsis) {
-   console.log(\`Saving synopsis for case \${docname}\`);
-   
-   clearTimeout(window.synopsisTimeout);
-   window.synopsisTimeout = setTimeout(() => {
-     fetch(\`/api/resource/CCMS3/\${docname}\`, {
+function saveEdits(docname, newSynopsis) {
+  if (!docname || docname === 'undefined' || docname === 'null') {
+    console.error('Cannot save edits: docname is invalid', docname);
+    return;
+  }
+  
+  console.log(\`Saving synopsis for case \${docname}\`);
+  
+  clearTimeout(window.synopsisTimeout);
+  window.synopsisTimeout = setTimeout(() => {
+    fetch(\`/api/resource/CCMS3/\${docname}\`, {
        method: 'PUT',
        headers: {
          'Content-Type': 'application/json',
@@ -2785,11 +2822,17 @@ function goToPageInput() {
    }, 1000);
  }
  
- function openAlertModal(docname) {
-   console.log(\`Opening alert modal for case \${docname}\`);
-   currentDocname = docname;
-   
-   const currentCase = allCases.find(c => c.name === docname);
+function openAlertModal(docname) {
+  if (!docname || docname === 'undefined' || docname === 'null') {
+    console.error('Cannot open alert modal: docname is invalid', docname);
+    showNotification('Invalid case ID', 'error');
+    return;
+  }
+  
+  console.log(\`Opening alert modal for case \${docname}\`);
+  currentDocname = docname;
+  
+  const currentCase = allCases.find(c => c.name === docname);
    if (currentCase && currentCase.alert_to) {
      const selectElement = document.getElementById('alert-to-select');
      const matchingOption = Array.from(selectElement.options).find(option => 
